@@ -74,6 +74,7 @@ class Lesson(SqlAlchemyBase):
     id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True, autoincrement=True)
     order = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
     time = sqlalchemy.Column(sqlalchemy.String, nullable=True)
+    classroom = sqlalchemy.Column(sqlalchemy.String, nullable=True)
     homework = sqlalchemy.Column(sqlalchemy.String, nullable=True)
 
     grade_id = sqlalchemy.Column(sqlalchemy.String,

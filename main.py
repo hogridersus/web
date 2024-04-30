@@ -64,8 +64,8 @@ def logout():
 
 
 @app.route("/marks")
-def marks(marks):
-    return
+def marks():
+    return "not done"
 
 
 @app.route("/<week_n>/<action>")
@@ -82,24 +82,37 @@ def index(week_n):
         return redirect('/login')
     session = db_session.create_session()
 
-    week_now = 0 + int(week_n)
-    school = session.query(School).filter(current_user.school_id == School.id).first()
-    grade = session.query(Grade).filter(current_user.grade_id == Grade.id).first()
-    days = session.query(Day).filter(current_user.grade_id == Day.grade_id, week_now == Day.week).all()
-
-    date = datetime.datetime.now().date() + datetime.timedelta(weeks=int(week_n))
-    start = date - datetime.timedelta(days=date.weekday())
-    end = start + datetime.timedelta(days=6)
-
-    week = f"{'{:02d}'.format(start.day)}.{'{:02d}'.format(start.month)} - {'{:02d}'.format(end.day)}.{'{:02d}'.format(end.month)}"
-
     schools = session.query(School).all()
     users = session.query(User).all()
 
     if current_user.status == 'student':
+        week_now = 0 + int(week_n)
+        school = session.query(School).filter(current_user.school_id == School.id).first()
+        grade = session.query(Grade).filter(current_user.grade_id == Grade.id).first()
+        days = session.query(Day).filter(current_user.grade_id == Day.grade_id, week_now == Day.week).all()
+
+        date = datetime.datetime.now().date() + datetime.timedelta(weeks=int(week_n))
+        start = date - datetime.timedelta(days=date.weekday())
+        end = start + datetime.timedelta(days=6)
+
+        week = f"{'{:02d}'.format(start.day)}.{'{:02d}'.format(start.month)} - {'{:02d}'.format(end.day)}.{'{:02d}'.format(end.month)}"
         return render_template("index_student.html", title='Дневник', school=school, grade=grade, days=days, week=week)
-    else:
-        return """working on it please wait"""
+    elif current_user.status == 'teacher':
+        week_now = 0 + int(week_n)
+        school = session.query(School).filter(current_user.school_id == School.id).first()
+        days = session.query(Day).filter(week_now == Day.week).all()
+
+        date = datetime.datetime.now().date() + datetime.timedelta(weeks=int(week_n))
+        start = date - datetime.timedelta(days=date.weekday())
+        end = start + datetime.timedelta(days=6)
+
+        week = f"{'{:02d}'.format(start.day)}.{'{:02d}'.format(start.month)} - {'{:02d}'.format(end.day)}.{'{:02d}'.format(end.month)}"
+        lessons = dict()
+        for i in days:
+            lessons[i.name] = session.query(Lesson).filter(current_user.id == Lesson.teacher_id,
+                                                           i.id == Lesson.day_id).all()
+        return render_template("index_teacher.html", title='Журнал', school=school, days=days, week=week,
+                               lessons=lessons)
 
 
 def main():
@@ -153,7 +166,18 @@ def add_default():
     subject = session.query(Subject).filter(Subject.name == 'Русский Язык').first()
 
     grade.users.append(user)
+    session.commit()
     school.users.append(user)
+    session.commit()
+
+    user1 = User()
+    user1.login = 'test_t'
+    user1.email = 'test_t@test.com'
+    user1.name = 'тестик 2'
+    user1.status = 'teacher'
+    user1.set_password('test_t')
+    session.add(user1)
+    session.commit()
     for i in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
         day = Day()
         day.name = i
@@ -165,6 +189,8 @@ def add_default():
         lesson.order = 1
         lesson.homework = f'Купить слона из мха ({i})'
         lesson.time = '8:15-8:55'
+        lesson.classroom = '302'
+        lesson.teacher = user1
         day.lessons.append(lesson)
         session.commit()
         grade.lessons.append(lesson)
@@ -190,6 +216,7 @@ def add_default():
         lesson.order = 1
         lesson.homework = f'Съесть из мха ({i})'
         lesson.time = '8:15-8:55'
+        lesson.classroom = '301'
         day.lessons.append(lesson)
         session.commit()
         grade.lessons.append(lesson)
@@ -204,6 +231,7 @@ def add_default():
         lesson.order = 2
         lesson.homework = f'Съесть из мха ({i} часть 2)'
         lesson.time = '9:05-9:45'
+        lesson.classroom = '306'
         day.lessons.append(lesson)
         session.commit()
         grade.lessons.append(lesson)

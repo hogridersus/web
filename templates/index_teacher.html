@@ -3,7 +3,7 @@
 {% block content %}
 <meta charset="UTF-8">
 <a href="marks" class="btn btn-primary">Отметки</a>
-<h1 align="center">Расписание {{ week }}</h1>
+<h1 align="center">Расписание уроков {{ week }}</h1>
 {% for day in days %}
 <h3 align="center">{{ day.name }}</h3>
 <div class="table_container">
@@ -11,9 +11,9 @@
         <tr class="my_row">
             <td class="title" width="200px" bgcolor="#aaaaaa">Предмет</td>
             <td class="title" width="600px" bgcolor="#cccccc">Домашнее задание</td>
-            <td class="title" width="200px" bgcolor="#aaaaaa" align="center">Отметки</td>
+            <td class="title" width="200px" bgcolor="#aaaaaa" align="center">Класс</td>
         </tr>
-        {% for lesson in day.lessons %}
+        {% for lesson in lessons[day.name] %}
         <tr class="my_row">
             <td class="ordinary" align="left" >
                 {{ lesson.order }}. {{ lesson.subject.name }}<br>
@@ -21,7 +21,7 @@
                 <font color="#aaaaaa">{{ lesson.classroom }} кабинет</font>
             </td>
             <td class="ordinary" align="left">{{ lesson.homework }}</td>
-            <td class="ordinary" align="center">{% for mark in lesson.marks %}<font size=16pt color="#aa0000">{{ mark.value }}</font><br>{% endfor %}</td>
+            <td class="ordinary" align="center">{{ lesson.grade.name }}</td>
         </tr>
         {% endfor %}
     </table>
