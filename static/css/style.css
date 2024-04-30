@@ -2,22 +2,19 @@ td.title {
     background-color: "#dddddd";
     align: "center";
     font-size: 14pt;
-    padding: 5px;
+    padding: 4px;
 }
 td.ordinary {
-    background-color: "#eeeeff";
+    border: 1px solid #dddddd;
+    background-color: "#ffffff;
     align: "center";
     font-size: 14pt;
-    padding: 5px;
+    padding: 4px;
 }
 h1 {
     font-size: 18pt
 }
-.gridContainer {
-  display: grid;
-  width: 100%;
-  grid-template-columns: 1fr 1fr;
-}
+
 h4 {
     color: #cccccc;
     padding: 12px;

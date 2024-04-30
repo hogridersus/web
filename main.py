@@ -1,8 +1,8 @@
 from flask import Flask, render_template, redirect
 from data import db_session
-from data.models import User, School, Grade
+from data.models import *
 from forms.user import RegisterForm, LoginForm
-from flask_login import LoginManager, login_user, logout_user, login_required, user_logged_in, current_user
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
@@ -19,8 +19,6 @@ def load_user(user_id):
 @app.route('/register', methods=['GET', 'POST'])
 def reqister():
     form = RegisterForm()
-    if user_logged_in:
-        return redirect("/")
     if form.validate_on_submit():
         if form.password.data != form.password_again.data:
             return render_template('register.html', title='Регистрация',
@@ -46,16 +44,13 @@ def reqister():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    if user_logged_in:
-        return redirect("/")
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.login == form.login.data).first() \
-               or User.email and db_sess.query(User).filter(User.email == form.email.data).first()
+        user = db_sess.query(User).filter(User.login == form.login.data).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            return redirect("/")
-        return render_template('login.html',
+            return redirect("/0")
+        return render_template('login.html', title='Авторизация',
                                message="Неправильный логин или пароль",
                                form=form)
     return render_template('login.html', title='Авторизация', form=form)
@@ -65,20 +60,44 @@ def login():
 @login_required
 def logout():
     logout_user()
-    return redirect("/")
+    return redirect("/0")
 
 
-@app.route("/")
-def index():
+@app.route("/marks")
+def marks(marks):
+    return
+
+
+@app.route("/<week_n>/<action>")
+def move(week_n, action):
+    if action == 'back':
+        return redirect(f"/{int(week_n) - 1}")
+    elif action == 'forward':
+        return redirect(f"/{int(week_n) + 1}")
+
+
+@app.route("/<week_n>")
+def index(week_n):
+    if not current_user.is_authenticated:
+        return redirect('/login')
     session = db_session.create_session()
 
+    week_now = 0 + int(week_n)
+    school = session.query(School).filter(current_user.school_id == School.id).first()
+    grade = session.query(Grade).filter(current_user.grade_id == Grade.id).first()
+    days = session.query(Day).filter(current_user.grade_id == Day.grade_id, week_now == Day.week).all()
+
+    date = datetime.datetime.now().date() + datetime.timedelta(weeks=int(week_n))
+    start = date - datetime.timedelta(days=date.weekday())
+    end = start + datetime.timedelta(days=6)
+
+    week = f"{'{:02d}'.format(start.day)}.{'{:02d}'.format(start.month)} - {'{:02d}'.format(end.day)}.{'{:02d}'.format(end.month)}"
+
     schools = session.query(School).all()
-
-    grades = session.query(Grade).all()
-
     users = session.query(User).all()
-    if current_user.type == 'student':
-        return render_template("index_student.html")
+
+    if current_user.status == 'student':
+        return render_template("index_student.html", title='Дневник', school=school, grade=grade, days=days, week=week)
     else:
         return """working on it please wait"""
 
@@ -88,6 +107,128 @@ def main():
     session = db_session.create_session()
 
     app.run(port=8080, host='127.0.0.1')
+
+
+def add_default():
+    session = db_session.create_session()
+
+    for i in ['Алгебра', 'Геометрия', 'Русский Язык', 'ИЗО', 'Музыка', 'Математика', 'Литература', 'Физика',
+              'Химия', 'Английский язык', 'Физкультура', 'Биология', 'Информатика', 'Технология']:
+        subject = Subject()
+        subject.name = i
+        session.add(subject)
+        session.commit()
+
+    school = School()
+    school.login = 'maou33'
+    school.name = 'МАОУ СОШ 33'
+    session.add(school)
+    session.commit()
+
+    for i in ['1А', '1Б', '1В', '1Г',
+              '2А', '2Б', '2В', '2Г',
+              '3А', '3Б', '3В', '3Г',
+              '4А', '4Б', '4В', '4Г',
+              '5А', '5Б', '5В', '5Г',
+              '6А', '6Б', '6В', '6ИМ', '6Л', '6ФМ',
+              '7А', '7Б', '7В', '7ИМ', '7Л', '7ФМ',
+              '8А', '8Б', '8В', '8ИМ', '8Л', '8ФМ',
+              '9А', '9Б', '9В', '9ИМ', '9Л', '9ФМ',
+              '10-1', '10-2', '10-3', '10-4',
+              '11-1', '11-2', '11-3', '11-4']:
+        grade = Grade()
+        grade.name = i
+        school.grades.append(grade)
+        session.commit()
+
+    user = User()
+    user.login = 'test'
+    user.email = 'test@test.com'
+    user.name = 'тестик'
+    user.set_password('test')
+    session.add(user)
+    session.commit()
+
+    grade = session.query(Grade).filter(Grade.name == '9ИМ', Grade.school_id == school.id).first()
+    subject = session.query(Subject).filter(Subject.name == 'Русский Язык').first()
+
+    grade.users.append(user)
+    school.users.append(user)
+    for i in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
+        day = Day()
+        day.name = i
+        day.week = 0
+        session.add(day)
+        session.commit()
+
+        lesson = Lesson()
+        lesson.order = 1
+        lesson.homework = f'Купить слона из мха ({i})'
+        lesson.time = '8:15-8:55'
+        day.lessons.append(lesson)
+        session.commit()
+        grade.lessons.append(lesson)
+        session.commit()
+        subject.lessons.append(lesson)
+        session.commit()
+
+        day.lessons.append(lesson)
+        session.commit()
+
+        grade.days.append(day)
+        session.commit()
+
+    subject = session.query(Subject).filter(Subject.name == 'Алгебра').first()
+    for i in ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота']:
+        day = Day()
+        day.name = i
+        day.week = 1
+        session.add(day)
+        session.commit()
+
+        lesson = Lesson()
+        lesson.order = 1
+        lesson.homework = f'Съесть из мха ({i})'
+        lesson.time = '8:15-8:55'
+        day.lessons.append(lesson)
+        session.commit()
+        grade.lessons.append(lesson)
+        session.commit()
+        subject.lessons.append(lesson)
+        session.commit()
+
+        day.lessons.append(lesson)
+        session.commit()
+
+        lesson = Lesson()
+        lesson.order = 2
+        lesson.homework = f'Съесть из мха ({i} часть 2)'
+        lesson.time = '9:05-9:45'
+        day.lessons.append(lesson)
+        session.commit()
+        grade.lessons.append(lesson)
+        session.commit()
+        subject.lessons.append(lesson)
+        session.commit()
+
+        day.lessons.append(lesson)
+        session.commit()
+
+        grade.days.append(day)
+        session.commit()
+    mark = Mark()
+    mark.value = 5
+    mark.coeff = 1
+    lesson.marks.append(mark)
+    session.commit()
+    user.marks.append(mark)
+    session.commit()
+    subject.marks.append(mark)
+    session.commit()
+    day.marks.append(mark)
+    session.commit()
+
+    session.commit()
 
 
 if __name__ == '__main__':

@@ -14,12 +14,13 @@
           {% if not current_user.is_authenticated %}
           <a href="login" class="btn btn-primary">Вход</a>
           {% else %}
-          <a href="https://google.com" class="btn btn-primary">Go to Google</a>
+          <a href="logout" class="btn btn-primary">Выход</a>
           {% endif %}
       </nav>
     </header>
     <!-- Begin page content -->
     <main role="main" class="container">
+        <br>
         {% block content %}{% endblock %}
     </main>
   </body>
