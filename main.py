@@ -96,7 +96,8 @@ def index(week_n):
         end = start + datetime.timedelta(days=6)
 
         week = f"{'{:02d}'.format(start.day)}.{'{:02d}'.format(start.month)} - {'{:02d}'.format(end.day)}.{'{:02d}'.format(end.month)}"
-        return render_template("index_student.html", title='Дневник', school=school, grade=grade, days=days, week=week)
+        return render_template("index_student.html", title='Дневник', school=school, grade=grade, days=days, week=week,
+                               week_int=week_now)
     elif current_user.status == 'teacher':
         week_now = 0 + int(week_n)
         school = session.query(School).filter(current_user.school_id == School.id).first()
@@ -112,7 +113,7 @@ def index(week_n):
             lessons[i.name] = session.query(Lesson).filter(current_user.id == Lesson.teacher_id,
                                                            i.id == Lesson.day_id).all()
         return render_template("index_teacher.html", title='Журнал', school=school, days=days, week=week,
-                               lessons=lessons)
+                               week_int=week_now, lessons=lessons)
 
 
 def main():

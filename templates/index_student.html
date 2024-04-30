@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <a href="marks" class="btn btn-primary">Отметки</a>
 <h1 align="center">Расписание {{ week }}</h1>
+<a href="{{ week_int - 1 }}">Пред. неделя</a> <a href="{{ week_int + 1 }}">След. неделя</a>
+{% if not days %}
+<h3 align="center">Рабочих дней нет</h3>
+{% endif %}
 {% for day in days %}
 <h3 align="center">{{ day.name }}</h3>
 <div class="table_container">
