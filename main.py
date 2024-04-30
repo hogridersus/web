@@ -65,15 +65,20 @@ def logout():
 
 @app.route("/marks")
 def marks():
-    return "not done"
+    if not current_user.is_authenticated:
+        return redirect('/login')
+    session = db_session.create_session()
 
-
-@app.route("/<week_n>/<action>")
-def move(week_n, action):
-    if action == 'back':
-        return redirect(f"/{int(week_n) - 1}")
-    elif action == 'forward':
-        return redirect(f"/{int(week_n) + 1}")
+    if current_user.status == 'student':
+        school = session.query(School).filter(current_user.school_id == School.id).first()
+        grade = session.query(Grade).filter(current_user.grade_id == Grade.id).first()
+        subjects = {}
+        for i in current_user.marks:
+            subjects[i.subject.name] = session.query(Mark).filter(Mark.user_id == current_user.id,
+                                                                  Mark.subject_id == i.subject_id).all()
+        return render_template("marks_student.html", title='Дневник', school=school, grade=grade, subjects=subjects)
+    else:
+        return "not done"
 
 
 @app.route("/<week_n>")

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<meta charset="UTF-8">
+<a href="." class="btn btn-primary">Главная</a>
+<h1 align="center">Оценки</h1>
+{% if not subjects %}
+<h3 align="center">Оценок нет</h3>
+{% endif %}
+<div class="table_container">
+    <table class="my_table">
+        {% for subject in subjects.keys() %}
+        <tr class="my_row">
+            <td class="ordinary" align="left" >{{ subject }}</td>
+            {% for mark in subjects[subject] %}
+            <td class="ordinary" align="center" width="40px" height="40px">
+                <font color="#aa0000">{{ mark.value }} </font>
+            </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+{% endblock %}
